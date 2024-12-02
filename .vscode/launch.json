@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "flutter_ai_chat",
+      "request": "launch",
+      "type": "dart"
+    },
+    {
+      "name": "flutter_ai_chat (release mode)",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "release"
+    }
+  ]
+}
