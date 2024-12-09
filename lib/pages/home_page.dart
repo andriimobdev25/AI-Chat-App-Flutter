@@ -1,13 +1,15 @@
+import 'dart:async';
+
 import 'package:firebase_vertexai/firebase_vertexai.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ai_toolkit/flutter_ai_toolkit.dart';
-import 'package:future_builder_ex/future_builder_ex.dart';
-import 'package:go_router/go_router.dart';
 
+import '../data/chat.dart';
 import '../data/chat_repository.dart';
 import '../data/settings.dart';
 import '../login_info.dart';
 import '../views/settings_drawer.dart';
+import 'chat_list_view.dart';
 import 'split_or_tabs.dart';
 
 class HomePage extends StatefulWidget {
@@ -17,55 +19,36 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage>
-    with SingleTickerProviderStateMixin {
-  final String _searchText = '';
+class _HomePageState extends State<HomePage> {
+  LlmProvider? _provider;
+  ChatRepository? _repository;
+  Chat? _currentChat;
 
-  late LlmProvider _provider = _createProvider();
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_initRepository());
+    _setProvider();
+  }
 
-  // create a new provider with the given history and the current settings
-  LlmProvider _createProvider([List<ChatMessage>? history]) => VertexProvider(
+  Future<void> _initRepository() async =>
+      _repository = await ChatRepository.forCurrentUser;
+
+  void _setProvider([Iterable<ChatMessage>? history]) {
+    _provider?.removeListener(_onHistoryChanged);
+
+    setState(
+      () => _provider = VertexProvider(
         history: history,
         model: FirebaseVertexAI.instance.generativeModel(
           model: 'gemini-1.5-flash',
-          generationConfig: GenerationConfig(
-            responseMimeType: 'application/json',
-            responseSchema: Schema(
-              SchemaType.object,
-              properties: {
-                'recipes': Schema(
-                  SchemaType.array,
-                  items: Schema(
-                    SchemaType.object,
-                    properties: {
-                      'text': Schema(SchemaType.string),
-                      'recipe': Schema(
-                        SchemaType.object,
-                        properties: {
-                          'title': Schema(SchemaType.string),
-                          'description': Schema(SchemaType.string),
-                          'ingredients': Schema(
-                            SchemaType.array,
-                            items: Schema(SchemaType.string),
-                          ),
-                          'instructions': Schema(
-                            SchemaType.array,
-                            items: Schema(SchemaType.string),
-                          ),
-                        },
-                      ),
-                    },
-                  ),
-                ),
-                'text': Schema(SchemaType.string),
-              },
-            ),
-          ),
           systemInstruction: Content.system(Settings.systemInstruction),
         ),
-      );
+      ),
+    );
 
-  final _repositoryFuture = ChatRepository.forCurrentUser;
+    _provider!.addListener(_onHistoryChanged);
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -78,61 +61,46 @@ class _HomePageState extends State<HomePage>
               onPressed: () async => LoginInfo.instance.logout(),
             ),
             IconButton(
-              onPressed: _onAdd,
-              tooltip: 'Add Recipe',
-              icon: const Icon(Icons.add),
+              onPressed: _repository == null ? null : _onAdd,
+              tooltip: 'New Chat',
+              icon: const Icon(Icons.edit_square),
             ),
           ],
         ),
-        drawer: Builder(
-          builder: (context) => SettingsDrawer(onSave: _onSettingsSave),
-        ),
-        body: FutureBuilderEx<ChatRepository>(
-          future: _repositoryFuture,
-          builder: (context, repository) => SplitOrTabs(
-            tabs: const [
-              Tab(text: 'Chats'),
-              Tab(text: 'Chat'),
-            ],
-            children: [
-              Column(
+        drawer: Drawer(child: SettingsDrawer(onSave: _onSettingsSave)),
+        body: _repository == null
+            ? const Center(child: CircularProgressIndicator())
+            : SplitOrTabs(
+                tabs: const [
+                  Tab(text: 'Chats'),
+                  Tab(text: 'Chat'),
+                ],
                 children: [
-                  Expanded(
-                    child: ChatListView(
-                      searchText: _searchText,
-                      repository: repository!,
-                    ),
+                  ChatListView(
+                    chats: _repository!.chats,
+                    selectedChat: _currentChat,
+                    onChatSelected: _onChatSelected,
                   ),
+                  LlmChatView(provider: _provider!),
                 ],
               ),
-              LlmChatView(
-                provider: _provider,
-                responseBuilder: (context, response) => RecipeResponseView(
-                  repository: repository,
-                  response: response,
-                ),
-              ),
-            ],
-          ),
-        ),
       );
 
-  void _onAdd() => context.goNamed(
-        'edit',
-        pathParameters: {'chat': ChatRepository.newChatID},
+  Future<void> _onAdd() async {
+    final chat = await _repository!.addChat();
+    await _onChatSelected(chat);
+  }
+
+  Future<void> _onChatSelected(Chat chat) async {
+    final history = await _repository!.getHistory(chat);
+    _setProvider(history);
+  }
+
+  Future<void> _onHistoryChanged() => _repository!.updateHistory(
+        _currentChat!,
+        _provider!.history.toList(),
       );
 
-  void _onSettingsSave() => setState(() {
-        // move the history over from the old provider to the new one
-        final history = _provider.history.toList();
-        _provider = _createProvider(history);
-      });
-}
-
-class ChatListView extends StatelessWidget {
-  const ChatListView({super.key});
-
-  @override
-  Widget build(BuildContext context) =>
-      ListView.builder(itemBuilder: (context, index) => Text('Chat $index'));
+  // move the history over from the old provider to the new one
+  void _onSettingsSave() => _setProvider(_provider!.history);
 }

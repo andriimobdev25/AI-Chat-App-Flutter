@@ -36,15 +36,6 @@ class _AppState extends State<App> {
         name: 'home',
         path: '/',
         builder: (context, state) => const HomePage(),
-        routes: [
-          GoRoute(
-            name: 'edit',
-            path: 'edit/:recipe',
-            builder: (context, state) => EditRecipePage(
-              recipeId: state.pathParameters['recipe']!,
-            ),
-          ),
-        ],
       ),
       GoRoute(
         name: 'login',
