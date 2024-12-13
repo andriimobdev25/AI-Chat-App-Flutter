@@ -106,10 +106,17 @@ class ChatRepository extends ChangeNotifier {
   }
 
   Future<void> deleteChat(Chat chat) async {
+    // remove the chat from the in-memory list
     final removed = _chats.remove(chat);
     assert(removed);
 
-    // TODO: does this delete the history, too? it should.
+    // delete the chat history from the database
+    final querySnapshot = await _historyCollection(chat).get();
+    for (final doc in querySnapshot.docs) {
+      await doc.reference.delete();
+    }
+
+    // delete the chat from the database
     await _chatsCollection.doc(chat.id).delete();
     notifyListeners();
 
