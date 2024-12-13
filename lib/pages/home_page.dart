@@ -25,12 +25,25 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    unawaited(_initRepository());
+    unawaited(_setRepository());
     _setProvider();
   }
 
-  Future<void> _initRepository() async =>
-      _repository = await ChatRepository.forCurrentUser;
+  Future<void> _setRepository() async {
+    assert(_repository == null);
+    _repository = await ChatRepository.forCurrentUser;
+    await _setChat(_repository!.chats.first);
+    setState(() {});
+  }
+
+  Future<void> _setChat(Chat chat) async {
+    assert(_currentChat?.id != chat.id);
+    debugPrint('Chat selected: ${chat.id}');
+    _currentChat = chat;
+    final history = await _repository!.getHistory(chat);
+    _setProvider(history);
+    setState(() {});
+  }
 
   void _setProvider([Iterable<ChatMessage>? history]) {
     _provider?.removeListener(_onHistoryChanged);
@@ -74,7 +87,7 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   ChatListView(
                     chats: _repository!.chats,
-                    selectedChat: _currentChat,
+                    selectedChat: _currentChat!,
                     onChatSelected: _onChatSelected,
                   ),
                   LlmChatView(provider: _provider!),
@@ -88,8 +101,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _onChatSelected(Chat chat) async {
-    final history = await _repository!.getHistory(chat);
-    _setProvider(history);
+    if (_currentChat?.id == chat.id) return;
+    await _setChat(chat);
   }
 
   Future<void> _onHistoryChanged() => _repository!.updateHistory(

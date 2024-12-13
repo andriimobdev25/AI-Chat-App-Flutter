@@ -11,17 +11,20 @@ class ChatListView extends StatelessWidget {
   });
 
   final List<Chat> chats;
-  final Chat? selectedChat;
+  final Chat selectedChat;
   final void Function(Chat) onChatSelected;
 
   @override
   Widget build(BuildContext context) => ListView.builder(
-        reverse: true,
+        itemCount: chats.length,
         itemBuilder: (context, index) {
-          final chat = chats[index];
+          final chat = chats[chats.length - index - 1];
           return ListTile(
+            leading: chat.id == selectedChat.id
+                ? const Icon(Icons.chevron_right)
+                : const SizedBox(),
             title: Text(chat.title),
-            selected: chat.id == selectedChat?.id,
+            selected: chat.id == selectedChat.id,
             onTap: () => onChatSelected(chat),
           );
         },
