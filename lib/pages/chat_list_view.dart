@@ -27,9 +27,12 @@ class ChatListView extends StatelessWidget {
             leading: chat.id == selectedChat.id
                 ? const Icon(Icons.chevron_right)
                 : const SizedBox(),
-            title: Text(
-              chat.title,
-              overflow: TextOverflow.ellipsis,
+            title: Tooltip(
+              message: chat.title,
+              child: Text(
+                chat.title,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
             trailing: OverflowBar(
               children: [

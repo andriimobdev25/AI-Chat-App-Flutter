@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dartx/dartx.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ai_toolkit/flutter_ai_toolkit.dart';
@@ -44,7 +45,6 @@ class ChatRepository extends ChangeNotifier {
       }
     }
 
-    debugPrint('Returning current user repository: $_currentUserRepository');
     return _currentUserRepository!;
   }
 
@@ -118,25 +118,32 @@ class ChatRepository extends ChangeNotifier {
   }
 
   Future<List<ChatMessage>> getHistory(Chat chat) async {
-    final messages = <ChatMessage>[];
     final querySnapshot = await _historyCollection(chat).get();
+
+    final indexedMessages = <int, ChatMessage>{};
     for (final doc in querySnapshot.docs) {
-      messages.add(ChatMessage.fromJson(doc.data()! as Map<String, dynamic>));
+      final index = int.parse(doc.id);
+      final message = ChatMessage.fromJson(doc.data()! as Map<String, dynamic>);
+      indexedMessages[index] = message;
     }
 
+    final messages = indexedMessages.entries
+        .sortedBy((e) => e.key)
+        .map((e) => e.value)
+        .toList();
     return messages;
   }
 
   Future<void> updateHistory(Chat chat, List<ChatMessage> history) async {
-    for (var i = 0; i < history.length; ++i) {
+    for (var i = 0; i != history.length; ++i) {
       // skip if the message already exists
       final id = i.toString().padLeft(3, '0');
-      final querySnapshot =
-          await _historyCollection(chat).where('id', isEqualTo: id).get();
-      if (querySnapshot.docs.isNotEmpty) continue;
+      final querySnapshot = await _historyCollection(chat).doc(id).get();
+      if (querySnapshot.exists) continue;
 
       final message = history[i];
-      await _historyCollection(chat).add(message.toJson());
+      final json = message.toJson();
+      await _historyCollection(chat).doc(id).set(json);
     }
   }
 }

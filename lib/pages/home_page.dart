@@ -38,7 +38,6 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _setChat(Chat chat) async {
     assert(_currentChat?.id != chat.id);
-    debugPrint('Chat selected: ${chat.id}');
     _currentChat = chat;
     final history = await _repository!.getHistory(chat);
     _setProvider(history);
@@ -66,14 +65,14 @@ class _HomePageState extends State<HomePage> {
           title: const Text('Flutter AI Chat'),
           actions: [
             IconButton(
-              icon: const Icon(Icons.logout),
-              tooltip: 'Logout: ${LoginInfo.instance.displayName!}',
-              onPressed: () async => LoginInfo.instance.logout(),
-            ),
-            IconButton(
               onPressed: _repository == null ? null : _onAdd,
               tooltip: 'New Chat',
               icon: const Icon(Icons.edit_square),
+            ),
+            IconButton(
+              icon: const Icon(Icons.logout),
+              tooltip: 'Logout: ${LoginInfo.instance.displayName!}',
+              onPressed: () async => LoginInfo.instance.logout(),
             ),
           ],
         ),
