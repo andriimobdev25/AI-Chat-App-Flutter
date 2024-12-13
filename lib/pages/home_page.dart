@@ -46,18 +46,16 @@ class _HomePageState extends State<HomePage> {
 
   void _setProvider([Iterable<ChatMessage>? history]) {
     _provider?.removeListener(_onHistoryChanged);
+    setState(() => _provider = _createProvider(history));
+    _provider!.addListener(_onHistoryChanged);
+  }
 
-    setState(
-      () => _provider = VertexProvider(
+  LlmProvider _createProvider(Iterable<ChatMessage>? history) => VertexProvider(
         history: history,
         model: FirebaseVertexAI.instance.generativeModel(
           model: 'gemini-1.5-flash',
         ),
-      ),
-    );
-
-    _provider!.addListener(_onHistoryChanged);
-  }
+      );
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -106,10 +104,37 @@ class _HomePageState extends State<HomePage> {
     await _setChat(chat);
   }
 
-  Future<void> _onHistoryChanged() => _repository!.updateHistory(
-        _currentChat!,
-        _provider!.history.toList(),
-      );
+  Future<void> _onHistoryChanged() async {
+    final history = _provider!.history.toList();
+
+    // update the history in the database
+    await _repository!.updateHistory(
+      _currentChat!,
+      history,
+    );
+
+    // if the history is not the first prompt or the user has manually set a
+    // chat title is not the default, do nothing more
+    if (history.length != 2 ||
+        _currentChat!.title != ChatRepository.newChatTitle) {
+      return;
+    }
+
+    // grab a default chat title for the first prompt
+    assert(history[0].origin.isUser);
+    assert(history[1].origin.isLlm);
+    final provider = _createProvider(history);
+    final stream = provider.sendMessageStream(
+      'Please give me a short title for this chat. It should be a single, '
+      'short phrase with no markdown',
+    );
+
+    // update the chat title in the database
+    final title = await stream.join();
+    final chatWithNewTitle = Chat(id: _currentChat!.id, title: title.trim());
+    await _repository!.updateChat(chatWithNewTitle);
+    setState(() => _currentChat = chatWithNewTitle);
+  }
 
   Future<void> _onRenameChat(Chat chat) async {
     final controller = TextEditingController(text: chat.title);
