@@ -29,6 +29,7 @@ class ChatRepository extends ChangeNotifier {
       assert(_currentUser != null);
       final collection = FirebaseFirestore.instance
           .collection('users/${_currentUser!.uid}/chats');
+
       final chats = await ChatRepository._loadChats(collection);
       _currentUserRepository = ChatRepository._(
         collection: collection,

@@ -12,6 +12,7 @@ analyzer:
     # some rules conflict; instead, we're explicitly enabling even conflicting
     # rules and are fixing the conflicts in this file
     included_file_warning: ignore
+    specify_nonobvious_local_variable_types: ignore
 
 linter:
   rules:
