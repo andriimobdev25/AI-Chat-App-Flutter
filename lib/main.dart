@@ -5,14 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'data/chat_repository.dart';
-import 'data/settings.dart';
 import 'firebase_options.dart'; // from https://firebase.google.com/docs/flutter/setup
 import 'login_info.dart';
 import 'pages/home_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Settings.init();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(App());
 }

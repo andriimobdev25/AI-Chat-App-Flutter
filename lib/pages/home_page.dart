@@ -6,9 +6,7 @@ import 'package:flutter_ai_toolkit/flutter_ai_toolkit.dart';
 
 import '../data/chat.dart';
 import '../data/chat_repository.dart';
-import '../data/settings.dart';
 import '../login_info.dart';
-import '../views/settings_drawer.dart';
 import 'chat_list_view.dart';
 import 'split_or_tabs.dart';
 
@@ -42,7 +40,6 @@ class _HomePageState extends State<HomePage> {
         history: history,
         model: FirebaseVertexAI.instance.generativeModel(
           model: 'gemini-1.5-flash',
-          systemInstruction: Content.system(Settings.systemInstruction),
         ),
       ),
     );
@@ -67,7 +64,6 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
-        drawer: Drawer(child: SettingsDrawer(onSave: _onSettingsSave)),
         body: _repository == null
             ? const Center(child: CircularProgressIndicator())
             : SplitOrTabs(
@@ -100,7 +96,4 @@ class _HomePageState extends State<HomePage> {
         _currentChat!,
         _provider!.history.toList(),
       );
-
-  // move the history over from the old provider to the new one
-  void _onSettingsSave() => _setProvider(_provider!.history);
 }
