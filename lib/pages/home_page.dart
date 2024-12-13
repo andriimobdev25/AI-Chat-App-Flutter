@@ -32,7 +32,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _setRepository() async {
     assert(_repository == null);
     _repository = await ChatRepository.forCurrentUser;
-    await _setChat(_repository!.chats.first);
+    await _setChat(_repository!.chats.last);
     setState(() {});
   }
 
@@ -79,9 +79,9 @@ class _HomePageState extends State<HomePage> {
         body: _repository == null
             ? const Center(child: CircularProgressIndicator())
             : SplitOrTabs(
-                tabs: const [
-                  Tab(text: 'Chats'),
-                  Tab(text: 'Chat'),
+                tabs: [
+                  const Tab(text: 'Chats'),
+                  Tab(text: _currentChat!.title),
                 ],
                 children: [
                   ChatListView(
@@ -160,7 +160,7 @@ class _HomePageState extends State<HomePage> {
 
     if (shouldDelete ?? false) {
       await _repository!.deleteChat(chat);
-      if (_currentChat!.id == chat.id) await _setChat(_repository!.chats.first);
+      if (_currentChat!.id == chat.id) await _setChat(_repository!.chats.last);
       setState(() {});
     }
   }

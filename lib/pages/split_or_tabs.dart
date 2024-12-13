@@ -27,8 +27,12 @@ class _SplitOrTabsState extends State<SplitOrTabs>
   }
 
   @override
-  Widget build(BuildContext context) => MediaQuery.of(context).size.width > 600
+  Widget build(BuildContext context) => MediaQuery.of(context).size.width > 800
       ? SplitView(
+          controller: SplitViewController(
+            weights: [0.3, 0.7],
+            limits: [WeightLimit(min: 0.2), WeightLimit(min: 0.4)],
+          ),
           viewMode: SplitViewMode.Horizontal,
           gripColor: Colors.transparent,
           indicator: const SplitIndicator(
