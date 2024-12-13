@@ -20,7 +20,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   LlmProvider? _provider;
   ChatRepository? _repository;
-  Chat? _currentChat;
+  String? _currentChatId;
 
   @override
   void initState() {
@@ -37,8 +37,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _setChat(Chat chat) async {
-    assert(_currentChat?.id != chat.id);
-    _currentChat = chat;
+    assert(_currentChatId != chat.id);
+    _currentChatId = chat.id;
     final history = await _repository!.getHistory(chat);
     _setProvider(history);
     setState(() {});
@@ -56,6 +56,9 @@ class _HomePageState extends State<HomePage> {
           model: 'gemini-1.5-flash',
         ),
       );
+
+  Chat? get _currentChat =>
+      _repository?.chats.singleWhere((chat) => chat.id == _currentChatId);
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -79,12 +82,12 @@ class _HomePageState extends State<HomePage> {
             : SplitOrTabs(
                 tabs: [
                   const Tab(text: 'Chats'),
-                  Tab(text: _currentChat!.title),
+                  Tab(text: _currentChat?.title),
                 ],
                 children: [
                   ChatListView(
                     chats: _repository!.chats,
-                    selectedChat: _currentChat!,
+                    selectedChatId: _currentChatId!,
                     onChatSelected: _onChatSelected,
                     onRenameChat: _onRenameChat,
                     onDeleteChat: _onDeleteChat,
@@ -100,7 +103,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _onChatSelected(Chat chat) async {
-    if (_currentChat?.id == chat.id) return;
+    if (_currentChatId == chat.id) return;
     await _setChat(chat);
   }
 
@@ -108,17 +111,12 @@ class _HomePageState extends State<HomePage> {
     final history = _provider!.history.toList();
 
     // update the history in the database
-    await _repository!.updateHistory(
-      _currentChat!,
-      history,
-    );
+    await _repository!.updateHistory(_currentChat!, history);
 
     // if the history is not the first prompt or the user has manually set a
     // chat title is not the default, do nothing more
-    if (history.length != 2 ||
-        _currentChat!.title != ChatRepository.newChatTitle) {
-      return;
-    }
+    if (history.length != 2) return;
+    if (_currentChat!.title != ChatRepository.newChatTitle) return;
 
     // grab a default chat title for the first prompt
     assert(history[0].origin.isUser);
@@ -131,9 +129,9 @@ class _HomePageState extends State<HomePage> {
 
     // update the chat title in the database
     final title = await stream.join();
-    final chatWithNewTitle = Chat(id: _currentChat!.id, title: title.trim());
+    final chatWithNewTitle = Chat(id: _currentChatId!, title: title.trim());
     await _repository!.updateChat(chatWithNewTitle);
-    setState(() => _currentChat = chatWithNewTitle);
+    setState(() => _currentChatId = chatWithNewTitle.id);
   }
 
   Future<void> _onRenameChat(Chat chat) async {
@@ -185,7 +183,7 @@ class _HomePageState extends State<HomePage> {
 
     if (shouldDelete ?? false) {
       await _repository!.deleteChat(chat);
-      if (_currentChat!.id == chat.id) await _setChat(_repository!.chats.last);
+      if (_currentChatId == chat.id) await _setChat(_repository!.chats.last);
       setState(() {});
     }
   }

@@ -5,7 +5,7 @@ import '../data/chat.dart';
 class ChatListView extends StatelessWidget {
   const ChatListView({
     required this.chats,
-    required this.selectedChat,
+    required this.selectedChatId,
     required this.onChatSelected,
     required this.onRenameChat,
     required this.onDeleteChat,
@@ -13,7 +13,7 @@ class ChatListView extends StatelessWidget {
   });
 
   final List<Chat> chats;
-  final Chat selectedChat;
+  final String selectedChatId;
   final void Function(Chat) onChatSelected;
   final void Function(Chat) onRenameChat;
   final void Function(Chat) onDeleteChat;
@@ -24,7 +24,7 @@ class ChatListView extends StatelessWidget {
         itemBuilder: (context, index) {
           final chat = chats[chats.length - index - 1];
           return ListTile(
-            leading: chat.id == selectedChat.id
+            leading: chat.id == selectedChatId
                 ? const Icon(Icons.chevron_right)
                 : const SizedBox(),
             title: Tooltip(
@@ -48,7 +48,7 @@ class ChatListView extends StatelessWidget {
                 ),
               ],
             ),
-            selected: chat.id == selectedChat.id,
+            selected: chat.id == selectedChatId,
             onTap: () => onChatSelected(chat),
           );
         },
