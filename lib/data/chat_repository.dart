@@ -112,6 +112,9 @@ class ChatRepository extends ChangeNotifier {
     // TODO: does this delete the history, too? it should.
     await _chatsCollection.doc(chat.id).delete();
     notifyListeners();
+
+    // if we've deleted the last chat, add a new one
+    if (_chats.isEmpty) await addChat();
   }
 
   Future<List<ChatMessage>> getHistory(Chat chat) async {

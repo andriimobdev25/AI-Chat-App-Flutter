@@ -7,12 +7,14 @@ class ChatListView extends StatelessWidget {
     required this.chats,
     required this.selectedChat,
     required this.onChatSelected,
+    required this.onDeleteChat,
     super.key,
   });
 
   final List<Chat> chats;
   final Chat selectedChat;
   final void Function(Chat) onChatSelected;
+  final void Function(Chat) onDeleteChat;
 
   @override
   Widget build(BuildContext context) => ListView.builder(
@@ -24,6 +26,10 @@ class ChatListView extends StatelessWidget {
                 ? const Icon(Icons.chevron_right)
                 : const SizedBox(),
             title: Text(chat.title),
+            trailing: IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: () => onDeleteChat(chat),
+            ),
             selected: chat.id == selectedChat.id,
             onTap: () => onChatSelected(chat),
           );

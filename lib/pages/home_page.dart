@@ -89,6 +89,7 @@ class _HomePageState extends State<HomePage> {
                     chats: _repository!.chats,
                     selectedChat: _currentChat!,
                     onChatSelected: _onChatSelected,
+                    onDeleteChat: _onDeleteChat,
                   ),
                   LlmChatView(provider: _provider!),
                 ],
@@ -109,4 +110,30 @@ class _HomePageState extends State<HomePage> {
         _currentChat!,
         _provider!.history.toList(),
       );
+
+  Future<void> _onDeleteChat(Chat chat) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Delete Chat: ${chat.title}'),
+        content: const Text('Are you sure you want to delete this chat?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDelete ?? false) {
+      await _repository!.deleteChat(chat);
+      if (_currentChat!.id == chat.id) await _setChat(_repository!.chats.first);
+      setState(() {});
+    }
+  }
 }
