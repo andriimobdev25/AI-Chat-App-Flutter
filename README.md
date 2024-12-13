@@ -1,6 +1,20 @@
 # Flutter AI Chat
 
-TODO
+Hello and welcome to the Flutter AI Chat sample app!
+
+The AI Chat sample is meant to be a full-fledged chat app built using [the Flutter AI Toolkit](https://pub.dev/packages/flutter_ai_toolkit) and Vertex AI for Firebase. In addition to all of the multi-shot, multi-media, streaming features that it gets from the AI Toolkit, the AI Chat sample shows how to store and manage multiple chats at once in your own apps.
+
+On desktop form-factors, the AI Chat sample looks like this:
+
+![alt text](README/screenshot-desktop.png)
+
+On mobile form-factors, it looks like this:
+
+![alt text](README/screenshot-mobile.png)
+
+The chats are stored in an authenticated Cloud Firestore database; any authenticated user can have as many chats as they like.
+
+In addition, for each new chat, while the user can manually title it whatever they like, the initial prompt and response will be used to ask the LLM what an appropriate title should be. In fact, the titles of the chats in the screenshots above were set automatically.
 
 # Getting Started
 
@@ -30,14 +44,6 @@ service cloud.firestore {
 ## Firebase AppCheck
 
 In addition, for maximum security, I recommend configuring your own apps with [Firebase AppCheck](https://firebase.google.com/learn/pathways/firebase-app-check).
-
-# Features
-
-TODO
-
-## Multi-platform
-
-This sample has been tested and works on all supported Firebase platforms: Android, iOS, web and macOS.
 
 # Feedback
 
