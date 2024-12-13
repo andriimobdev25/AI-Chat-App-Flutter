@@ -7,6 +7,7 @@ class ChatListView extends StatelessWidget {
     required this.chats,
     required this.selectedChat,
     required this.onChatSelected,
+    required this.onRenameChat,
     required this.onDeleteChat,
     super.key,
   });
@@ -14,6 +15,7 @@ class ChatListView extends StatelessWidget {
   final List<Chat> chats;
   final Chat selectedChat;
   final void Function(Chat) onChatSelected;
+  final void Function(Chat) onRenameChat;
   final void Function(Chat) onDeleteChat;
 
   @override
@@ -25,10 +27,23 @@ class ChatListView extends StatelessWidget {
             leading: chat.id == selectedChat.id
                 ? const Icon(Icons.chevron_right)
                 : const SizedBox(),
-            title: Text(chat.title),
-            trailing: IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: () => onDeleteChat(chat),
+            title: Text(
+              chat.title,
+              overflow: TextOverflow.ellipsis,
+            ),
+            trailing: OverflowBar(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit),
+                  tooltip: 'Rename Chat',
+                  onPressed: () => onRenameChat(chat),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete),
+                  tooltip: 'Delete Chat',
+                  onPressed: () => onDeleteChat(chat),
+                ),
+              ],
             ),
             selected: chat.id == selectedChat.id,
             onTap: () => onChatSelected(chat),

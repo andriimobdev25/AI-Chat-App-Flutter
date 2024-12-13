@@ -89,6 +89,7 @@ class _HomePageState extends State<HomePage> {
                     chats: _repository!.chats,
                     selectedChat: _currentChat!,
                     onChatSelected: _onChatSelected,
+                    onRenameChat: _onRenameChat,
                     onDeleteChat: _onDeleteChat,
                   ),
                   LlmChatView(provider: _provider!),
@@ -110,6 +111,34 @@ class _HomePageState extends State<HomePage> {
         _currentChat!,
         _provider!.history.toList(),
       );
+
+  Future<void> _onRenameChat(Chat chat) async {
+    final controller = TextEditingController(text: chat.title);
+    final newTitle = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Rename Chat: ${chat.title}'),
+        content: TextField(
+          controller: controller,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(controller.text),
+            child: const Text('Rename'),
+          ),
+        ],
+      ),
+    );
+
+    if (newTitle != null) {
+      await _repository!.updateChat(Chat(id: chat.id, title: newTitle));
+      setState(() {});
+    }
+  }
 
   Future<void> _onDeleteChat(Chat chat) async {
     final shouldDelete = await showDialog<bool>(
