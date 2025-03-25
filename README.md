@@ -44,7 +44,3 @@ service cloud.firestore {
 ## Firebase AppCheck
 
 In addition, for maximum security, I recommend configuring your own apps with [Firebase AppCheck](https://firebase.google.com/learn/pathways/firebase-app-check).
-
-# Feedback
-
-Are you having trouble with this app even after it's been configured correctly? Feel free to drop issues or, even better, PRs, into [the flutter_ai_chat repo](https://github.com/csells/flutter_ai_chat).
